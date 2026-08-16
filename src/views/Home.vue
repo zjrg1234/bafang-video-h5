@@ -899,7 +899,6 @@ onMounted(async () => {
   // 是不是小程序
   const inMini = await checkMiniProgram();
   if (inMini) {
-
     await nextTick();
     handleLoad();
   }
@@ -920,9 +919,16 @@ const handleLoad = () => {
     paramTimer.value = setInterval(() => {
         // 麦克风
         const micVal = getUrlParam('micVal');
+        const closeFlagVal = getUrlParam('closeFlag');
         const openSpeakerVal = getUrlParam('openSpeaker');
         const resRatio = getUrlParam('resRatio');
         const initAction = getUrlParam('initAction');
+
+        if (closeFlagVal) {
+          handleCloseAudio();
+          handleCloseVideo();
+          return;
+        }
 
         if (initAction == 'video_audio' && !videoFlag.value) {
           videoFlag.value = true;
@@ -983,7 +989,7 @@ const handleLoad = () => {
 
       
 
-    }, 2000)
+    }, 1500)
   } else {
     clearInterval(paramTimer.value)
   }
