@@ -1157,14 +1157,11 @@ $transition: all 0.2s ease-in-out;
 
   .video-res {
     position: absolute;
-    top: 15px;
+    top: 10px;
     left: 50px;
     width: 145px;
     height: 32px;
     z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
     span {
       font-size: 10px;
       display: inline-block;
@@ -1175,7 +1172,7 @@ $transition: all 0.2s ease-in-out;
       border: 1px solid #f5c542;
       color: #fff;
       background-color: rgba(0, 0, 0, 0.5);
-      // margin-right: 5px;
+      margin-right: 10px;
     }
 
     .active {
