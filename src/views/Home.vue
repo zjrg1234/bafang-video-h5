@@ -968,7 +968,7 @@ onMounted(async () => {
 
 
   if (getUrlParam('videoDefinition')) {
-    const targetValues = videoDefinition.value.split(",");
+    const targetValues = getUrlParam('videoDefinition').split(",");
     qualityList.value = qualityListMap.filter((item) =>
       targetValues.includes(item.value),
     );
