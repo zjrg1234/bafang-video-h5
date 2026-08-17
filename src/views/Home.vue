@@ -27,26 +27,18 @@
           <img class="icon-image" src="../assets/microphone_close@2x.png" alt="" srcset="">
         </div> -->
 
-        <div class="icon-wrap mic-wrap" v-show="isMicOpen"
-     @pointerdown="onPointerDown"
-     @pointerup="onPointerUp"
-     @pointercancel="onPointerCancel"
-     @pointerleave="onPointerCancel"
-     @contextmenu.prevent>
-  <img class="icon-image" src="../assets/microphone_open@2x.png" alt="" />
-  <div v-show="rippleActive" class="ripple"></div>
-</div>
+        <div class="icon-wrap mic-wrap" v-show="isMicOpen" @pointerdown="onPointerDown" @pointerup="onPointerUp"
+          @pointercancel="onPointerCancel" @pointerleave="onPointerCancel" @contextmenu.prevent>
+          <img class="icon-image" src="../assets/microphone_open@2x.png" alt="" />
+          <div v-show="rippleActive" class="ripple"></div>
+        </div>
 
-<div class="icon-wrap mic-wrap" v-show="!isMicOpen"
-     @pointerdown="onPointerDown"
-     @pointerup="onPointerUp"
-     @pointercancel="onPointerCancel"
-     @pointerleave="onPointerCancel"
-     @contextmenu.prevent>
-  <img class="icon-image" src="../assets/microphone_close@2x.png" alt="" />
-  <div v-show="rippleActive" class="ripple"></div>
-</div>
-        
+        <div class="icon-wrap mic-wrap" v-show="!isMicOpen" @pointerdown="onPointerDown" @pointerup="onPointerUp"
+          @pointercancel="onPointerCancel" @pointerleave="onPointerCancel" @contextmenu.prevent>
+          <img class="icon-image" src="../assets/microphone_close@2x.png" alt="" />
+          <div v-show="rippleActive" class="ripple"></div>
+        </div>
+
 
         <!-- WiFi 图标 -->
         <div class="icon-wrap sound-wrap" v-show="isSoundOpen" ref="soundRef" @click="handleSound">
@@ -121,7 +113,7 @@ let isLongPress = false;
 
 const onPointerDown = (e) => {
   isLongPress = false;
-  
+
   longPressTimer = setTimeout(() => {
     isLongPress = true;
     if (!isMicOpen.value) return;
@@ -141,6 +133,7 @@ const onPointerUp = (e) => {
     rippleActive.value = false;
     isLongPress = false;
     isMicOpen.value = false;
+    closeMic();
     return;
   }
 
@@ -707,6 +700,7 @@ const closeSpeaker = () => {
 
 // 打开麦克风
 const openMic = () => {
+  console.log("openMic", 1)
   if (!isAudioPlay.value) {
     report910Callback({ method: 'openMic', state: '当前音频未开启，调用无效', ret: false });
     return;
@@ -727,6 +721,7 @@ const openMic = () => {
 
 // 关闭麦克风
 const closeMic = () => {
+  console.log(1)
   if (!isAudioPlay.value) {
     report910Callback({ method: 'closeMic', state: '当前音频未开启，调用无效', ret: false });
     return;
@@ -1119,16 +1114,17 @@ const stopRipple = () => {
 
 let isFlag = false;
 const handleMic = async () => {
-  console.log(123)
   isMicOpen.value = !isMicOpen.value
-  
   if (isMicOpen.value) {
     if (isFlag) {
       openMic();
     } else {
       isFlag = true
       await handleOpenAudio();
-      closeSpeaker();
+      const timer = setTimeout(() => {
+        clearTimeout(timer)
+        closeSpeaker();
+      }, 1000)
     }
   } else {
     closeMic()
@@ -1143,7 +1139,10 @@ const handleSound = async () => {
     } else {
       isFlag = true
       await handleOpenAudio();
-      closeMic();
+      const timer = setTimeout(() => {
+        clearTimeout(timer)
+        closeMic();
+      }, 1000)
     }
   } else {
     closeSpeaker()
@@ -1278,6 +1277,7 @@ $transition: all 0.2s ease-in-out;
     height: 30px;
     border-radius: 50%;
     touch-action: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .mic-wrap {
@@ -1316,6 +1316,27 @@ $transition: all 0.2s ease-in-out;
     }
   }
 
+
+  //   width: 300%;           // 增大容器，让波纹扩散范围更广
+  //   height: 300%;
+  //   transform: translate(-50%, -50%) scale(0.2); // 初始状态：很小
+  //   border-radius: 50%;
+  //   background: rgba(255, 200, 56, 0.5); // 初始颜色稍深
+  //   pointer-events: none;
+  //   z-index: 5;
+  //   animation: rippleExpand 2s linear infinite; // 线性运动，无限循环
+  // }
+
+  // @keyframes rippleExpand {
+  //   0% {
+  //     transform: translate(-50%, -50%) scale(0.2);
+  //     opacity: 0.6;
+  //   }
+  //   100% {
+  //     transform: translate(-50%, -50%) scale(1.5);  // 向外扩散到最大
+  //     opacity: 0;            // 完全透明消失
+  //   }
+  // }
   .sound-wrap {
     top: 120px;
     right: 55px;
