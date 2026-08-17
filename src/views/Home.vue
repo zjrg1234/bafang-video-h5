@@ -19,13 +19,34 @@
             {{ item.label }}
           </span>
         </div>
-        <div class="icon-wrap mic-wrap" v-show="isMicOpen" ref="micRef" @click="handleMic">
+        <!-- <div class="icon-wrap mic-wrap" v-show="isMicOpen" ref="micRef" @click="handleMic">
           <img class="icon-image" src="../assets/microphone_open@2x.png" alt="" srcset="">
         </div>
 
         <div class="icon-wrap mic-wrap" v-show="!isMicOpen" ref="micRef" @click="handleMic">
           <img class="icon-image" src="../assets/microphone_close@2x.png" alt="" srcset="">
-        </div>
+        </div> -->
+
+        <div class="icon-wrap mic-wrap" v-show="isMicOpen"
+     @pointerdown="onPointerDown"
+     @pointerup="onPointerUp"
+     @pointercancel="onPointerCancel"
+     @pointerleave="onPointerCancel"
+     @contextmenu.prevent>
+  <img class="icon-image" src="../assets/microphone_open@2x.png" alt="" />
+  <div v-show="rippleActive" class="ripple"></div>
+</div>
+
+<div class="icon-wrap mic-wrap" v-show="!isMicOpen"
+     @pointerdown="onPointerDown"
+     @pointerup="onPointerUp"
+     @pointercancel="onPointerCancel"
+     @pointerleave="onPointerCancel"
+     @contextmenu.prevent>
+  <img class="icon-image" src="../assets/microphone_close@2x.png" alt="" />
+  <div v-show="rippleActive" class="ripple"></div>
+</div>
+        
 
         <!-- WiFi 图标 -->
         <div class="icon-wrap sound-wrap" v-show="isSoundOpen" ref="soundRef" @click="handleSound">
@@ -93,6 +114,53 @@ let connectedWifi = ref(-1);
 let socketUsable = ref(false);
 
 let openAudioResolver = null;
+
+
+let longPressTimer = null;
+let isLongPress = false;
+
+const onPointerDown = (e) => {
+  isLongPress = false;
+  
+  longPressTimer = setTimeout(() => {
+    isLongPress = true;
+    if (!isMicOpen.value) return;
+    rippleActive.value = true;
+  }, 500); // 长按阈值 500ms
+};
+
+const onPointerUp = (e) => {
+  // 清除定时器
+  if (longPressTimer) {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+
+  if (isLongPress) {
+    // 长按结束，隐藏波纹
+    rippleActive.value = false;
+    isLongPress = false;
+    isMicOpen.value = false;
+    return;
+  }
+
+  // 单击：先执行业务，再显示波纹闪现
+  handleMic();
+
+  rippleActive.value = true;
+  setTimeout(() => {
+    rippleActive.value = false;
+  }, 300); // 闪现 300ms
+};
+
+const onPointerCancel = () => {
+  if (longPressTimer) {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+  rippleActive.value = false;
+  isLongPress = false;
+};
 
 //生成随机peer_id
 var getClientId = (n) => {
@@ -1035,9 +1103,25 @@ const handleSelect = (value) => {
   ElMessage.success(`切换成功`);
 };
 
+
+const rippleActive = ref(false);
+
+const startRipple = () => {
+  rippleActive.value = true;
+};
+
+const stopRipple = () => {
+  console.log(12)
+  rippleActive.value = false;
+  closeMic()
+  isMicOpen.value = false;
+};
+
 let isFlag = false;
 const handleMic = async () => {
+  console.log(123)
   isMicOpen.value = !isMicOpen.value
+  
   if (isMicOpen.value) {
     if (isFlag) {
       openMic();
@@ -1163,6 +1247,7 @@ $transition: all 0.2s ease-in-out;
     width: 145px;
     height: 32px;
     z-index: 10;
+
     span {
       font-size: 10px;
       display: inline-block;
@@ -1192,11 +1277,43 @@ $transition: all 0.2s ease-in-out;
     width: 30px;
     height: 30px;
     border-radius: 50%;
+    touch-action: none;
   }
 
   .mic-wrap {
     top: 80px;
     right: 55px;
+  }
+
+  .ripple {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%; // 比父容器大两倍
+    height: 200%;
+    transform: translate(-50%, -50%) scale(0.5); // 初始缩放调整，使波纹从中心开始
+    border-radius: 50%;
+    background: rgba(245, 197, 66, 0.8); // 透明度降低，更柔和
+    pointer-events: none;
+    z-index: 5;
+    animation: ripplePulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes ripplePulse {
+    0% {
+      transform: translate(-50%, -50%) scale(0.6);
+      opacity: 0.5;
+    }
+
+    50% {
+      transform: translate(-50%, -50%) scale(1.6);
+      opacity: 0.1;
+    }
+
+    100% {
+      transform: translate(-50%, -50%) scale(0.6);
+      opacity: 0.5;
+    }
   }
 
   .sound-wrap {
@@ -1210,7 +1327,7 @@ $transition: all 0.2s ease-in-out;
 
     -webkit-touch-callout: none;
     user-select: none;
-    pointer-events: none; 
+    pointer-events: none;
   }
 }
 
