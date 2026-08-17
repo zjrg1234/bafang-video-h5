@@ -726,6 +726,7 @@ const changeSpeaker = debounce(() => {
 let preResolution = ''
 const changeResolution = debounce((e) => {
     if(!iframeRef.value) return
+    console.log(e,"=======")
     iframeRef.value.contentWindow.handleChangeRes(e)
 }, 500)
 watch(() => resolution.value, (newVal, oldVal) => {

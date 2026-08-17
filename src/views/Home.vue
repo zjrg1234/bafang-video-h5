@@ -11,6 +11,30 @@
         <div v-show="showWifiIcon" class="wifi-icon-wrap" ref="wifiIconRef" @click="openWifiConfig">
           <i class="fa fa-wifi"></i>
         </div>
+
+        <div class="video-res" ref="videoResRef">
+
+          <span v-for="(item, index) in qualityList" :key="index" class="btn-quality"
+            :class="{ active: currentQuality === item.value }" @click="handleSelect(item.value)">
+            {{ item.label }}
+          </span>
+        </div>
+        <div class="icon-wrap mic-wrap" v-show="isMicOpen" ref="micRef" @click="handleMic">
+          <img class="icon-image" src="../assets/microphone_open@2x.png" alt="" srcset="">
+        </div>
+
+        <div class="icon-wrap mic-wrap" v-show="!isMicOpen" ref="micRef" @click="handleMic">
+          <img class="icon-image" src="../assets/microphone_close@2x.png" alt="" srcset="">
+        </div>
+
+        <!-- WiFi 图标 -->
+        <div class="icon-wrap sound-wrap" v-show="isSoundOpen" ref="soundRef" @click="handleSound">
+          <img class="icon-image" src="../assets/sound_open@2x.png" alt="" srcset="">
+        </div>
+
+        <div class="icon-wrap sound-wrap" v-show="!isSoundOpen" ref="soundRef" @click="handleSound">
+          <img class="icon-image" src="../assets/sound_close@2x.png" alt="" srcset="">
+        </div>
       </div>
 
       <!-- 视频信息展示 -->
@@ -52,11 +76,23 @@ let peer_id = ''; // 本地 Peer ID
 let remote_peer_id = '';
 let token = '';
 let initAction = null;
+const isSoundOpen = ref(false)
+const isMicOpen = ref(false)
+
+const qualityListMap = [
+  { label: "超清", value: "2" },
+  { label: "高清", value: "3" },
+  { label: "标清", value: "4" },
+];
+const qualityList = ref([]);
+const currentQuality = ref('')
 //有效值
 const initActionValidList = ["video_only", "video_audio"];
 let socket = null;
 let connectedWifi = ref(-1);
 let socketUsable = ref(false);
+
+let openAudioResolver = null;
 
 //生成随机peer_id
 var getClientId = (n) => {
@@ -127,9 +163,15 @@ const callback = (type, message) => {
         // const tracks = audioRef.value.srcObject?.getAudioTracks() || [];
         //此处为了解决调用音频接口时，快速调用麦克风关闭操作无效的问题(因为显示调用成功时，音频建立需要一定时间)
         isAudioPlay.value = true;
-        report910Callback({ method: 'handleOpenAudio', state: '调用成功(打开音频)', ret: true });
+        const result = { method: 'handleOpenAudio', state: '调用成功(打开音频)', ret: true };
+        report910Callback(result);
+        openAudioResolver?.resolve(result);
+        openAudioResolver = null;
       }).catch(error => {
-        report910Callback({ method: 'handleOpenAudio', state: '调用失败(打开音频)', ret: false });
+        const result = { method: 'handleOpenAudio', state: '调用失败(打开音频)', ret: false }
+        report910Callback(result);
+        openAudioResolver?.reject(result);
+        openAudioResolver = null;
       });
       break;
     }
@@ -450,6 +492,16 @@ const handleOpenVideo = () => {
     }
     socket.send(peerJson);
   }, 500);
+
+  const timer = setTimeout(() => {
+    if (openAudioResolver) {
+      const err = { method: 'handleOpenAudio', state: '调用超时(设备无响应)', ret: false };
+      report910Callback(err);
+      openAudioResolver.reject(err);
+      openAudioResolver = null;
+    }
+    clearTimeout(timer);
+  }, 10000); // 10秒超时
 }
 const handleCloseVideo = () => {
   if (!socketUsable.value) {
@@ -496,27 +548,39 @@ const handleCloseVideo = () => {
 }
 
 // 切换音频静音状态
+// 新增：存储当前音频打开的 Promise resolve/reject
+
+
 const handleOpenAudio = () => {
-  if (!socketUsable.value) {
-    report910Callback({ method: 'handleOpenAudio', state: '调用失败(未连接服务)', ret: false });
-    return;
-  }
-  if (!audioRef.value || isAudioPlay.value) {
-    report910Callback({ method: 'handleOpenAudio', state: '当前音频处于开启状态，无需重复开启', ret: false });
-    return;
-  };
-  if (!isVideoPlay.value) {
-    report910Callback({ method: 'handleOpenAudio', state: '请先开启视频，再调用此接口开启音频', ret: false });
-    return;
-  }
-  let peerJson = {
-    type: 100,
-    sub_type: 160,
-    remote_peer_id: +remote_peer_id,
-    data: { sdp: '' },
-    peer_id: peer_id
-  };
-  socket.send(peerJson);
+  return new Promise((resolve, reject) => {
+    if (!socketUsable.value) {
+      const err = { method: 'handleOpenAudio', state: '调用失败(未连接服务)', ret: false };
+      report910Callback(err);
+      return reject(err);
+    }
+    if (!audioRef.value || isAudioPlay.value) {
+      const err = { method: 'handleOpenAudio', state: '当前音频处于开启状态，无需重复开启', ret: false };
+      report910Callback(err);
+      return reject(err);
+    }
+    if (!isVideoPlay.value) {
+      const err = { method: 'handleOpenAudio', state: '请先开启视频，再调用此接口开启音频', ret: false };
+      report910Callback(err);
+      return reject(err);
+    }
+
+    // 保存 resolver，供 callback 中调用
+    openAudioResolver = { resolve, reject };
+
+    const peerJson = {
+      type: 100,
+      sub_type: 160,
+      remote_peer_id: +remote_peer_id,
+      data: { sdp: '' },
+      peer_id: peer_id
+    };
+    socket.send(peerJson);
+  });
 };
 
 const handleCloseAudio = () => {
@@ -883,7 +947,7 @@ onMounted(async () => {
   if (initActionValidList.includes(rawVal)) {
     initAction = rawVal;
   }
-  console.log('初始化状态', initAction)
+
   localStorage.setItem('video_token', token)
   isShowWifiIcon();
   //初始化ws连接
@@ -895,14 +959,31 @@ onMounted(async () => {
   window.addEventListener("orientationchange", updateOrientation);
   updateOrientation();
 
-
   // 是不是小程序
-  const inMini = await checkMiniProgram();
-  if (inMini) {
-    await nextTick();
-    handleLoad();
+  // const inMini = await checkMiniProgram();
+  // if (inMini) {
+  //   await nextTick();
+  //   handleLoad();
+  // }
+
+
+  if (getUrlParam('videoDefinition')) {
+    const targetValues = videoDefinition.value.split(",");
+    qualityList.value = qualityListMap.filter((item) =>
+      targetValues.includes(item.value),
+    );
+    currentQuality.value = getUrlParam('defaultCameraClarity') + '';
+  } else {
+    qualityList.value = qualityListMap;
+    currentQuality.value = '2'
   }
 
+  const closeFlagVal = getUrlParam('closeFlag');
+  if (closeFlagVal) {
+    handleCloseAudio();
+    handleCloseVideo();
+    return;
+  }
 });
 const hasMicOpen = ref(false);
 const hasMicClose = ref(false);
@@ -917,78 +998,10 @@ const paramTimer = ref(null);
 const handleLoad = () => {
   if (!paramTimer.value) {
     paramTimer.value = setInterval(() => {
-        // 麦克风
-        const micVal = getUrlParam('micVal');
-        const closeFlagVal = getUrlParam('closeFlag');
-        const openSpeakerVal = getUrlParam('openSpeaker');
-        const resRatio = getUrlParam('resRatio');
-        const initAction = getUrlParam('initAction');
-
-        if (closeFlagVal) {
-          handleCloseAudio();
-          handleCloseVideo();
-          return;
-        }
-
-        if (initAction == 'video_audio' && !videoFlag.value) {
-          videoFlag.value = true;
-          handleOpenAudio();
-        } else {
-          videoFlag.value = false;
-        }
-
-        // 打开麦克风
-        if (micVal == "1" && !hasMicOpen.value) {
-          hasMicOpen.value = true
-          hasMicClose.value = false
-          openMic()
-        } 
-        // 关闭麦克风
-        if(micVal == '0' && !hasMicClose.value) {
-          hasMicClose.value = true
-          hasMicOpen.value = false
-          closeMic()
-        }
-
-        // 打开扩音器
-        if (openSpeakerVal == '1' && !hasSpeakerOpen.value) {
-          hasSpeakerOpen.value = true
-          hasSpeakerClose.value = false
-          openSpeaker()
-        }
-
-          // 关闭扩音器
-        if (openSpeakerVal == '0' && !hasSpeakerClose.value) {
-          hasSpeakerOpen.value = false
-          hasSpeakerClose.value = true
-          closeSpeaker()
-        }
-
-        if(resRatio== '1' && !hasRes1.value) {
-          hasRes1.value = true;
-          hasRes2.value = false;
-          hasRes3.value = false;
-
-          handleChangeRes("1920x1080")
-        }
-
-         if(resRatio== '2' && !hasRes2.value) {
-          hasRes2.value = true;
-          hasRes1.value = false;
-          hasRes3.value = false;
-
-          handleChangeRes("1280x720")
-        }
-
-         if(resRatio== '3' && !hasRes3.value) {
-          hasRes3.value = true;
-          hasRes1.value = false;
-          hasRes2.value = false;
-          handleChangeRes("640x480")
-        }
-
-      
-
+      if (initAction == 'video_audio' && !videoFlag.value) {
+        videoFlag.value = true;
+        handleOpenAudio();
+      }
     }, 1500)
   } else {
     clearInterval(paramTimer.value)
@@ -1010,6 +1023,47 @@ const checkMiniProgram = () => {
   });
 };
 
+const resRatioObj = Object.freeze({
+  2: "1920x1080",
+  3: "1280x720",
+  4: "640x480",
+})
+const handleSelect = (value) => {
+  currentQuality.value = value;
+  handleChangeRes(resRatioObj[value])
+  ElMessage.success(`切换成功`);
+};
+
+let isFlag = false;
+const handleMic = async () => {
+  isMicOpen.value = !isMicOpen.value
+  if (isMicOpen.value) {
+    if (isFlag) {
+      openMic();
+    } else {
+      isFlag = true
+      await handleOpenAudio();
+      closeSpeaker();
+    }
+  } else {
+    closeMic()
+  }
+}
+
+const handleSound = async () => {
+  isSoundOpen.value = !isSoundOpen.value
+  if (isSoundOpen.value) {
+    if (isFlag) {
+      closeSpeaker();
+    } else {
+      isFlag = true
+      await handleOpenAudio();
+      closeMic();
+    }
+  } else {
+    closeSpeaker()
+  }
+}
 
 onUnmounted(() => {
   // 组件卸载时关闭连接
@@ -1100,6 +1154,64 @@ $transition: all 0.2s ease-in-out;
     backdrop-filter: blur(4px);
     cursor: pointer;
   }
+
+  .video-res {
+    position: absolute;
+    top: 15px;
+    left: 50px;
+    width: 145px;
+    height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+
+
+    span {
+      font-size: 12px;
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+      border-radius: 50%;
+      border: 1px solid #f5c542;
+      color: #fff;
+      background-color: rgba(0, 0, 0, 0.5);
+      // margin-right: 5px;
+    }
+
+    .active {
+      color: #f5c542;
+    }
+  }
+
+  .icon-wrap {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    z-index: 10;
+    transition: transform 0.3s ease;
+    backdrop-filter: blur(4px);
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+  }
+
+  .mic-wrap {
+    top: 80px;
+    right: 55px;
+  }
+
+  .sound-wrap {
+    top: 120px;
+    right: 55px;
+  }
+
+  .icon-image {
+    width: 27px;
+    height: 27px;
+  }
 }
 
 .video-info {
@@ -1163,6 +1275,8 @@ $transition: all 0.2s ease-in-out;
     }
   }
 }
+
+
 
 // 响应式适配
 @media (max-width: 768px) {
