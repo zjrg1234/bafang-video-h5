@@ -1043,9 +1043,12 @@ onMounted(async () => {
   }
 
   const closeFlagVal = getUrlParam('closeFlag');
-  if (closeFlagVal) {
-    handleCloseAudio();
-    handleCloseVideo();
+  if (closeFlagVal == 1) {
+    const timer = setTimeout(() => {
+      clearTimeout(timer)
+      handleCloseAudio();
+      handleCloseVideo();
+    }, 2000)
     return;
   }
 });
@@ -1106,7 +1109,6 @@ const startRipple = () => {
 };
 
 const stopRipple = () => {
-  console.log(12)
   rippleActive.value = false;
   closeMic()
   isMicOpen.value = false;
