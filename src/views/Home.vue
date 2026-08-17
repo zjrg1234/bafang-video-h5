@@ -644,6 +644,7 @@ const openMic = () => {
     return;
   };
   //若用户这边没有开启麦克风权限
+  console.log(peerconn.local_stream)
   if (!peerconn.local_stream) {
     report910Callback({ method: 'openMic', state: '当前麦克风权限未开启，调用失败', ret: false });
     return;
@@ -1054,7 +1055,7 @@ const handleSound = async () => {
   isSoundOpen.value = !isSoundOpen.value
   if (isSoundOpen.value) {
     if (isFlag) {
-      closeSpeaker();
+      openSpeaker();
     } else {
       isFlag = true
       await handleOpenAudio();
@@ -1206,6 +1207,10 @@ $transition: all 0.2s ease-in-out;
   .icon-image {
     width: 27px;
     height: 27px;
+
+    -webkit-touch-callout: none;
+    user-select: none;
+    pointer-events: none; 
   }
 }
 
