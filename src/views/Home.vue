@@ -1161,18 +1161,16 @@ $transition: all 0.2s ease-in-out;
     left: 50px;
     width: 145px;
     height: 32px;
-
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: space-around;
-
-
     span {
-      font-size: 12px;
+      font-size: 10px;
       display: inline-block;
-      width: 30px;
-      height: 30px;
-      line-height: 30px;
+      width: 25px;
+      height: 25px;
+      line-height: 25px;
       border-radius: 50%;
       border: 1px solid #f5c542;
       color: #fff;
