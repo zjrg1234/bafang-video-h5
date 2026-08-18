@@ -1045,8 +1045,8 @@ const queryVideo = (orderNo) => {
     axios.post("https://api.fzbkapp.com/api/query/key", {
     order_no: orderNo,
   })
-  .then(res => {
-    if (res.code == 200 && res.data.type == 1) {
+  .then((res) => {
+    if (res.data.code == 200 && res.data.data.type == 1) {
       axios.post("https://api.fzbkapp.com/api/del/key", { order_no: orderNo})
       handleCloseAudio();
       handleCloseVideo();
@@ -1054,7 +1054,7 @@ const queryVideo = (orderNo) => {
     }
   })
   .catch();
-  }, 1000);
+  }, 1500);
 }
 
 const hasMicOpen = ref(false);
