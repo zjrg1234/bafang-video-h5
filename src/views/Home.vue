@@ -1023,14 +1023,6 @@ onMounted(async () => {
   window.addEventListener("orientationchange", updateOrientation);
   updateOrientation();
 
-  // 是不是小程序
-  // const inMini = await checkMiniProgram();
-  // if (inMini) {
-  //   await nextTick();
-  //   handleLoad();
-  // }
-
-
   if (getUrlParam('videoDefinition')) {
     const targetValues = getUrlParam('videoDefinition').split(",");
     qualityList.value = qualityListMap.filter((item) =>
@@ -1040,16 +1032,6 @@ onMounted(async () => {
   } else {
     qualityList.value = qualityListMap;
     currentQuality.value = '2'
-  }
-
-  const closeFlagVal = getUrlParam('closeFlag');
-  if (closeFlagVal == 1) {
-    const timer = setTimeout(() => {
-      clearTimeout(timer)
-      handleCloseAudio();
-      handleCloseVideo();
-    }, 2000)
-    return;
   }
 });
 const hasMicOpen = ref(false);
@@ -1157,7 +1139,8 @@ onUnmounted(() => {
   // 移除窗口变化事件监听
   window.removeEventListener("resize", updateOrientation);
   window.removeEventListener("orientationchange", updateOrientation);
-  paramTimer.value && clearInterval(paramTimer.value)
+  handleCloseVideo()
+  handleCloseAudio()
 });
 </script>
 
