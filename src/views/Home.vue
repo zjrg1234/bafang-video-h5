@@ -78,6 +78,7 @@
 
 <script setup>
 import { ref, reactive, onUnmounted, onMounted } from 'vue';
+import axios from 'axios';
 import InitWebSocket from '../utils/ws';
 import PeerConnection from '../utils/p2p';
 import { getUrlParam } from '../utils/func';
@@ -1033,7 +1034,29 @@ onMounted(async () => {
     qualityList.value = qualityListMap;
     currentQuality.value = '2'
   }
+
+  if(getUrlParam('orderNo')) {
+    queryVideo(getUrlParam('orderNo'))
+  }
 });
+
+const queryVideo = (orderNo) => {
+  const timer = setInterval(() => {
+    axios.post("https://api.fzbkapp.com/api/query/key", {
+    order_no: orderNo,
+  })
+  .then(res => {
+    if (res.code == 200 && res.data.type == 1) {
+      axios.post("https://api.fzbkapp.com/api/del/key", { order_no: orderNo})
+      handleCloseAudio();
+      handleCloseVideo();
+      clearInterval(timer)
+    }
+  })
+  .catch();
+  }, 1000);
+}
+
 const hasMicOpen = ref(false);
 const hasMicClose = ref(false);
 const hasSpeakerOpen = ref(false);
