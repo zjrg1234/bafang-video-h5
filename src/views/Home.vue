@@ -1164,9 +1164,19 @@ const handleSound = async () => {
     } else {
       isFlag = true
       await handleOpenAudio();
-      const timer = setTimeout(() => {
-        clearTimeout(timer)
-        closeMic();
+       // 开启一个定时器，mic_forbid 禁止使用麦克风
+      const timer = setInterval(() => {
+         isMicOpen.value = false
+        if (isUseMic.value == 'mic_forbid') {
+          clearInterval(timer)
+          closeSpeaker();
+          isSoundOpen.value = false;
+        } else  if(isUseMic.value == 'sdp交互完成') {
+          clearInterval(timer)
+          closeMic();
+          openSpeaker();
+          isSoundOpen.value = true;
+        }
       }, 1000)
     }
   } else {
