@@ -85,6 +85,7 @@ import { getUrlParam } from '../utils/func';
 import wifi from '../components/wifi.vue';
 import { ElMessage } from 'element-plus';
 import { checkDeviceUpdate } from '../api/index.js';
+
 // ------------------- 全局变量 & 配置 -------------------
 let peer_id = ''; // 本地 Peer ID
 let remote_peer_id = '';
@@ -94,6 +95,7 @@ const isSoundOpen = ref(false)
 const isMicOpen = ref(false)
 
 const qualityListMap = [
+  { label: "户外", value: "1" },
   { label: "超清", value: "2" },
   { label: "高清", value: "3" },
   { label: "标清", value: "4" },
@@ -107,22 +109,24 @@ let connectedWifi = ref(-1);
 let socketUsable = ref(false);
 
 let openAudioResolver = null;
-
-
 let longPressTimer = null;
 let isLongPress = false;
 
-const onPointerDown = (e) => {
-  isLongPress = false;
+const isUseMic = ref(false)
 
+const onPointerDown = (e) => {
+
+  isLongPress = false;
   longPressTimer = setTimeout(() => {
     isLongPress = true;
-    if (!isMicOpen.value) return;
     rippleActive.value = true;
-  }, 500); // 长按阈值 500ms
+    isMicOpen.value =  true;
+    openMic();
+  }, 800); // 长按阈值 500ms
 };
 
 const onPointerUp = (e) => {
+ 
   // 清除定时器
   if (longPressTimer) {
     clearTimeout(longPressTimer);
@@ -142,12 +146,14 @@ const onPointerUp = (e) => {
   handleMic();
 
   rippleActive.value = true;
-  setTimeout(() => {
+  const timer = setTimeout(() => {
     rippleActive.value = false;
+    clearTimeout(timer)
   }, 300); // 闪现 300ms
 };
 
 const onPointerCancel = () => {
+
   if (longPressTimer) {
     clearTimeout(longPressTimer);
     longPressTimer = null;
@@ -262,7 +268,7 @@ const callback = (type, message) => {
       nativeReport(907, JSON.stringify(message));
       break;
     case "connection_state":
-      console.log(`连接状态:`, message.state);
+      isUseMic.value = message.state
       nativeReport(909, `${message.state}`)
       break;
   }
@@ -722,7 +728,7 @@ const openMic = () => {
 
 // 关闭麦克风
 const closeMic = () => {
-  console.log(1)
+
   if (!isAudioPlay.value) {
     report910Callback({ method: 'closeMic', state: '当前音频未开启，调用无效', ret: false });
     return;
@@ -1122,15 +1128,27 @@ const stopRipple = () => {
 let isFlag = false;
 const handleMic = async () => {
   isMicOpen.value = !isMicOpen.value
+
   if (isMicOpen.value) {
     if (isFlag) {
       openMic();
     } else {
       isFlag = true
       await handleOpenAudio();
-      const timer = setTimeout(() => {
-        clearTimeout(timer)
-        closeSpeaker();
+
+     // 开启一个定时器，mic_forbid 禁止使用麦克风
+      const timer = setInterval(() => {
+         isMicOpen.value = false
+        if (isUseMic.value == 'mic_forbid') {
+          clearInterval(timer)
+          closeSpeaker();
+          isSoundOpen.value = false;
+        } else  if(isUseMic.value == 'sdp交互完成') {
+          clearInterval(timer)
+          closeMic();
+          openSpeaker();
+          isSoundOpen.value = true;
+        }
       }, 1000)
     }
   } else {
