@@ -95,7 +95,6 @@ const isSoundOpen = ref(false)
 const isMicOpen = ref(false)
 
 const qualityListMap = [
-  { label: "户外", value: "1" },
   { label: "超清", value: "2" },
   { label: "高清", value: "3" },
   { label: "标清", value: "4" },
