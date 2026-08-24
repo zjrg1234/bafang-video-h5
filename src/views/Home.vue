@@ -1278,7 +1278,7 @@ $transition: all 0.2s ease-in-out;
   .video-res {
     position: absolute;
     top: 10px;
-    left: 50px;
+    left: 95px;
     width: 145px;
     height: 32px;
     z-index: 10;
