@@ -18,6 +18,14 @@
             :class="{ active: currentQuality === item.value }" @click="handleSelect(item.value)">
             {{ item.label }}
           </span>
+          <span  class="btn-quality" @click="handleSelect(5)">
+            日志
+          </span>
+        </div>
+        <div class="log-res" v-if="isShowLog">
+          <div class="log-cont">
+            <span v-for="(item, index) in logArr" :key="index">{{ item }}</span>
+          </div>
         </div>
         <!-- <div class="icon-wrap mic-wrap" v-show="isMicOpen" ref="micRef" @click="handleMic">
           <img class="icon-image" src="../assets/microphone_open@2x.png" alt="" srcset="">
@@ -86,6 +94,8 @@ import wifi from '../components/wifi.vue';
 import { ElMessage } from 'element-plus';
 import { checkDeviceUpdate } from '../api/index.js';
 
+const logArr = ref([]);
+const isShowLog= ref(false)
 // ------------------- 全局变量 & 配置 -------------------
 let peer_id = ''; // 本地 Peer ID
 let remote_peer_id = '';
@@ -230,11 +240,15 @@ const callback = (type, message) => {
         // const tracks = audioRef.value.srcObject?.getAudioTracks() || [];
         //此处为了解决调用音频接口时，快速调用麦克风关闭操作无效的问题(因为显示调用成功时，音频建立需要一定时间)
         isAudioPlay.value = true;
+        logArr.value.push('调用成功(打开音频)')
+        
         const result = { method: 'handleOpenAudio', state: '调用成功(打开音频)', ret: true };
         report910Callback(result);
         openAudioResolver?.resolve(result);
         openAudioResolver = null;
       }).catch(error => {
+        logArr.value.push('调用失败(打开音频)')
+
         const result = { method: 'handleOpenAudio', state: '调用失败(打开音频)', ret: false }
         report910Callback(result);
         openAudioResolver?.reject(result);
@@ -264,10 +278,13 @@ const callback = (type, message) => {
     // 监听连接状态
     case "datachannel_message":
       console.log(`数据通道消息:`, message);
+      logArr.value.push("数据通道消息"+JSON.stringify(message))
+
       nativeReport(907, JSON.stringify(message));
       break;
     case "connection_state":
       isUseMic.value = message.state
+      logArr.value.push(message.state)
       nativeReport(909, `${message.state}`)
       break;
   }
@@ -442,7 +459,8 @@ const handleMessage = async (json) => {
     setInitCallback({ state: '初始化成功', ret: true });
     const res = await checkWebrtcUsable();
     nativeReport(909, `${res.msg}`)
-    console.log(res);
+
+    logArr.value.push("socket_open" + res.msg)
     if (initAction && initAction.includes('video')) {
       handleOpenVideo()
     }
@@ -530,15 +548,19 @@ const checkWebrtcUsable = async () => {
 const handleOpenVideo = () => {
   //remote_peer_id只能为数字格式
   if (!/^\d+$/.test(remote_peer_id)) {
+    logArr.value.push("调用失败(设备ID参数错误)")
+
     report910Callback({ method: 'handleOpenVideo', state: '调用失败(设备ID参数错误)', ret: false });
     return
   }
   if (!socketUsable.value) {
+    logArr.value.push("调用失败(未连接服务)")
     report910Callback({ method: 'handleOpenVideo', state: '调用失败(未连接服务)', ret: false });
     return;
   }
   if (!videoRef.value) return;
   if (isVideoPlay.value) {
+    logArr.value.push("当前视频处于开启状态，无需重复开启")
     report910Callback({ method: 'handleOpenVideo', state: '当前视频处于开启状态，无需重复开启', ret: false });
     return;
   }
@@ -550,6 +572,10 @@ const handleOpenVideo = () => {
     peer_id: peer_id
   };
   socket.send(peerJson);
+
+  logArr.value.push("peerJson")
+
+
   setTimeout(() => {
     peerJson = {
       type: 300,
@@ -562,6 +588,8 @@ const handleOpenVideo = () => {
 
   const timer = setTimeout(() => {
     if (openAudioResolver) {
+      logArr.value.push("调用超时(设备无响应)")
+
       const err = { method: 'handleOpenAudio', state: '调用超时(设备无响应)', ret: false };
       report910Callback(err);
       openAudioResolver.reject(err);
@@ -1106,9 +1134,14 @@ const resRatioObj = Object.freeze({
   4: "640x480",
 })
 const handleSelect = (value) => {
+   if (value == 5) {
+    isShowLog.value = !isShowLog.value;
+    return;
+  }
   currentQuality.value = value;
   handleChangeRes(resRatioObj[value])
   ElMessage.success(`切换成功`);
+ 
 };
 
 
@@ -1274,11 +1307,29 @@ $transition: all 0.2s ease-in-out;
     cursor: pointer;
   }
 
+  .log-res {
+
+    position: absolute;
+    top: 30px;
+    left: 95px;
+    width: 145px;
+    height: 32px;
+    z-index: 10;
+
+    .log-cont {
+      width: 200px;
+      height: 150px;
+      overflow: auto;
+    }
+
+
+  }
   .video-res {
     position: absolute;
     top: 10px;
     left: 95px;
     width: 145px;
+    width: 185px;
     height: 32px;
     z-index: 10;
 
