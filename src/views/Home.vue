@@ -21,7 +21,7 @@
         </div>
         <div class="log-res" v-if="isShowVideo">
           <span class="btn-quality open-video" @click="openVideo">
-            打开视频
+            点击视频播放按钮
           </span>
         </div>
         <!-- <div class="icon-wrap mic-wrap" v-show="isMicOpen" ref="micRef" @click="handleMic">
@@ -1321,13 +1321,13 @@ $transition: all 0.2s ease-in-out;
 
     position: absolute;
     top: 12px;
-    left: 95px;
-    width: 100px;
+    left: 80px;
+    // width: 100px;
     z-index: 10;
 
     .open-video {
       display: inline-block;
-      font-size: 15px;
+      font-size: 14px;
       padding: 0 4px;
       border: 1px solid #f5c542;
       color: #fff;
