@@ -18,7 +18,7 @@
             :class="{ active: currentQuality === item.value }" @click="handleSelect(item.value)">
             {{ item.label }}
           </span>
-          <span  class="btn-quality" @click="handleSelect(5)">
+          <span class="btn-quality" @click="handleSelect(5)">
             日志
           </span>
         </div>
@@ -95,7 +95,7 @@ import { ElMessage } from 'element-plus';
 import { checkDeviceUpdate } from '../api/index.js';
 
 const logArr = ref([]);
-const isShowLog= ref(false)
+const isShowLog = ref(false)
 // ------------------- 全局变量 & 配置 -------------------
 let peer_id = ''; // 本地 Peer ID
 let remote_peer_id = '';
@@ -129,13 +129,13 @@ const onPointerDown = (e) => {
   longPressTimer = setTimeout(() => {
     isLongPress = true;
     rippleActive.value = true;
-    isMicOpen.value =  true;
+    isMicOpen.value = true;
     openMic();
   }, 800); // 长按阈值 500ms
 };
 
 const onPointerUp = (e) => {
- 
+
   // 清除定时器
   if (longPressTimer) {
     clearTimeout(longPressTimer);
@@ -241,7 +241,7 @@ const callback = (type, message) => {
         //此处为了解决调用音频接口时，快速调用麦克风关闭操作无效的问题(因为显示调用成功时，音频建立需要一定时间)
         isAudioPlay.value = true;
         logArr.value.push('调用成功(打开音频)')
-        
+
         const result = { method: 'handleOpenAudio', state: '调用成功(打开音频)', ret: true };
         report910Callback(result);
         openAudioResolver?.resolve(result);
@@ -278,7 +278,7 @@ const callback = (type, message) => {
     // 监听连接状态
     case "datachannel_message":
       console.log(`数据通道消息:`, message);
-      logArr.value.push("数据通道消息"+JSON.stringify(message))
+      logArr.value.push("数据通道消息" + JSON.stringify(message))
 
       nativeReport(907, JSON.stringify(message));
       break;
@@ -1068,7 +1068,7 @@ onMounted(async () => {
     currentQuality.value = '2'
   }
 
-  if(getUrlParam('orderNo')) {
+  if (getUrlParam('orderNo')) {
     queryVideo(getUrlParam('orderNo'))
   }
 });
@@ -1076,17 +1076,17 @@ onMounted(async () => {
 const queryVideo = (orderNo) => {
   const timer = setInterval(() => {
     axios.post("https://api.fzbkapp.com/api/query/key", {
-    order_no: orderNo,
-  })
-  .then((res) => {
-    if (res.data.code == 200 && res.data.data.type == 1) {
-      axios.post("https://api.fzbkapp.com/api/del/key", { order_no: orderNo})
-      handleCloseAudio();
-      handleCloseVideo();
-      clearInterval(timer)
-    }
-  })
-  .catch();
+      order_no: orderNo,
+    })
+      .then((res) => {
+        if (res.data.code == 200 && res.data.data.type == 1) {
+          axios.post("https://api.fzbkapp.com/api/del/key", { order_no: orderNo })
+          handleCloseAudio();
+          handleCloseVideo();
+          clearInterval(timer)
+        }
+      })
+      .catch();
   }, 1500);
 }
 
@@ -1134,14 +1134,14 @@ const resRatioObj = Object.freeze({
   4: "640x480",
 })
 const handleSelect = (value) => {
-   if (value == 5) {
+  if (value == 5) {
     isShowLog.value = !isShowLog.value;
     return;
   }
   currentQuality.value = value;
   handleChangeRes(resRatioObj[value])
   ElMessage.success(`切换成功`);
- 
+
 };
 
 
@@ -1168,14 +1168,14 @@ const handleMic = async () => {
       isFlag = true
       await handleOpenAudio();
 
-     // 开启一个定时器，mic_forbid 禁止使用麦克风
+      // 开启一个定时器，mic_forbid 禁止使用麦克风
       const timer = setInterval(() => {
-         isMicOpen.value = false
+        isMicOpen.value = false
         if (isUseMic.value == 'mic_forbid') {
           clearInterval(timer)
           closeSpeaker();
           isSoundOpen.value = false;
-        } else  if(isUseMic.value == 'sdp交互完成') {
+        } else if (isUseMic.value == 'sdp交互完成') {
           clearInterval(timer)
           closeMic();
           openSpeaker();
@@ -1196,14 +1196,14 @@ const handleSound = async () => {
     } else {
       isFlag = true
       await handleOpenAudio();
-       // 开启一个定时器，mic_forbid 禁止使用麦克风
+      // 开启一个定时器，mic_forbid 禁止使用麦克风
       const timer = setInterval(() => {
-         isMicOpen.value = false
+        isMicOpen.value = false
         if (isUseMic.value == 'mic_forbid') {
           clearInterval(timer)
           closeSpeaker();
           isSoundOpen.value = false;
-        } else  if(isUseMic.value == 'sdp交互完成') {
+        } else if (isUseMic.value == 'sdp交互完成') {
           clearInterval(timer)
           closeMic();
           openSpeaker();
@@ -1324,6 +1324,7 @@ $transition: all 0.2s ease-in-out;
 
 
   }
+
   .video-res {
     position: absolute;
     top: 10px;
