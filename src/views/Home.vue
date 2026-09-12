@@ -18,14 +18,11 @@
             :class="{ active: currentQuality === item.value }" @click="handleSelect(item.value)">
             {{ item.label }}
           </span>
-          <span class="btn-quality" @click="handleSelect(5)">
-            日志
-          </span>
         </div>
-        <div class="log-res" v-if="isShowLog">
-          <div class="log-cont">
-            <span v-for="(item, index) in logArr" :key="index">{{ item }}</span>
-          </div>
+        <div class="log-res" v-if="isShowVideo">
+          <span class="btn-quality open-video" @click="openVideo">
+            打开视频
+          </span>
         </div>
         <!-- <div class="icon-wrap mic-wrap" v-show="isMicOpen" ref="micRef" @click="handleMic">
           <img class="icon-image" src="../assets/microphone_open@2x.png" alt="" srcset="">
@@ -96,6 +93,7 @@ import { checkDeviceUpdate } from '../api/index.js';
 
 const logArr = ref([]);
 const isShowLog = ref(false)
+const isShowVideo = ref(true)
 // ------------------- 全局变量 & 配置 -------------------
 let peer_id = ''; // 本地 Peer ID
 let remote_peer_id = '';
@@ -1057,6 +1055,11 @@ onMounted(async () => {
   window.addEventListener("orientationchange", updateOrientation);
   updateOrientation();
 
+  if(getUrlParam('ios')) {
+    isShowVideo.value = true
+  } else {
+    isShowVideo.value = false
+  }
   if (getUrlParam('videoDefinition')) {
     const targetValues = getUrlParam('videoDefinition').split(",");
     qualityList.value = qualityListMap.filter((item) =>
@@ -1074,6 +1077,7 @@ onMounted(async () => {
 });
 
 const queryVideo = (orderNo) => {
+
   const timer = setInterval(() => {
     axios.post("https://api.fzbkapp.com/api/query/key", {
       order_no: orderNo,
@@ -1084,6 +1088,7 @@ const queryVideo = (orderNo) => {
           handleCloseAudio();
           handleCloseVideo();
           clearInterval(timer)
+          logArr.value = []
         }
       })
       .catch();
@@ -1141,8 +1146,11 @@ const handleSelect = (value) => {
   currentQuality.value = value;
   handleChangeRes(resRatioObj[value])
   ElMessage.success(`切换成功`);
-
 };
+
+const openVideo = () => {
+  handleOpenVideo()
+}
 
 
 const rippleActive = ref(false);
@@ -1224,6 +1232,7 @@ onUnmounted(() => {
   window.removeEventListener("orientationchange", updateOrientation);
   handleCloseVideo()
   handleCloseAudio()
+  logArr.value = []
 });
 </script>
 
@@ -1310,16 +1319,18 @@ $transition: all 0.2s ease-in-out;
   .log-res {
 
     position: absolute;
-    top: 30px;
+    top: 12px;
     left: 95px;
-    width: 145px;
-    height: 32px;
+    width: 100px;
     z-index: 10;
 
-    .log-cont {
-      width: 200px;
-      height: 150px;
-      overflow: auto;
+    .open-video {
+      display: inline-block;
+      font-size: 15px;
+      padding: 0 4px;
+      border: 1px solid #f5c542;
+      color: #fff;
+      background-color: rgba(0, 0, 0, 0.5);
     }
 
 
@@ -1328,9 +1339,8 @@ $transition: all 0.2s ease-in-out;
   .video-res {
     position: absolute;
     top: 10px;
-    left: 95px;
-    width: 145px;
-    width: 185px;
+    left: 195px;
+    width: 135px;
     height: 32px;
     z-index: 10;
 
