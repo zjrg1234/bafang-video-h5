@@ -1150,6 +1150,7 @@ const handleSelect = (value) => {
 
 const openVideo = () => {
   handleOpenVideo()
+  handleOpenAudio()
 }
 
 
