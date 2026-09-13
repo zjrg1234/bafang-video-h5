@@ -4,7 +4,7 @@
       <!-- 视频容器 -->
       <div class="video-wrapper">
         <video poster="../assets/video.png" ref="videoRef" id="video-player" class="video-element" autoplay playsinline
-          muted controlsList="nodownload" :style="{ objectFit: fitMode }" @canplay="videoCanplay"></video>
+          muted  x5-playsinline="true" controlsList="nodownload" :style="{ objectFit: fitMode }" @canplay="videoCanplay"></video>
 
         <audio ref="audioRef" id="audio-player" autoplay class="audio-element"></audio>
         <!-- WiFi 图标 -->
@@ -1149,6 +1149,12 @@ const handleSelect = (value) => {
 };
 
 const openVideo = () => {
+  if (videoRef.value) {
+    alert("videoRef.value")
+    alert(videoRef.value)
+    videoRef.value.play().catch(e => console.log('视频播放请求被拦截', e));
+  }
+
   handleOpenVideo()
   handleOpenAudio()
 }
