@@ -92,7 +92,7 @@ import { checkDeviceUpdate } from '../api/index.js';
 
 const logArr = ref([]);
 const isShowLog = ref(false)
-const isShowVideo = ref(true)
+const isShowVideo = ref(false)
 // ------------------- 全局变量 & 配置 -------------------
 let peer_id = ''; // 本地 Peer ID
 let remote_peer_id = '';
