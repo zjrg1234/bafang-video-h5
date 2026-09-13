@@ -1375,8 +1375,8 @@ $transition: all 0.2s ease-in-out;
   .video-res {
     position: absolute;
     top: 10px;
-    left: 195px;
-    width: 110px;
+    left: 100px;
+    width: 125px;
     height: 32px;
     z-index: 10;
 
@@ -1390,7 +1390,7 @@ $transition: all 0.2s ease-in-out;
       border: 1px solid #f5c542;
       color: #fff;
       background-color: rgba(0, 0, 0, 0.5);
-      margin-right: 5px;
+      margin-right: 10px;
     }
 
     .active {
