@@ -1055,7 +1055,7 @@ onMounted(async () => {
   window.addEventListener("orientationchange", updateOrientation);
   updateOrientation();
 
-  if(getUrlParam('ios')) {
+  if(getUrlParam('ios') == 'ios') {
     isShowVideo.value = true
   } else {
     isShowVideo.value = false
@@ -1321,8 +1321,7 @@ $transition: all 0.2s ease-in-out;
 
     position: absolute;
     top: 12px;
-    left: 80px;
-    // width: 100px;
+    left: 70px;
     z-index: 10;
 
     .open-video {
@@ -1341,7 +1340,7 @@ $transition: all 0.2s ease-in-out;
     position: absolute;
     top: 10px;
     left: 195px;
-    width: 135px;
+    width: 110px;
     height: 32px;
     z-index: 10;
 
@@ -1355,7 +1354,7 @@ $transition: all 0.2s ease-in-out;
       border: 1px solid #f5c542;
       color: #fff;
       background-color: rgba(0, 0, 0, 0.5);
-      margin-right: 10px;
+      margin-right: 5px;
     }
 
     .active {
