@@ -20,9 +20,8 @@
           </span>
         </div>
         <div class="log-res" v-if="isShowVideo">
-          <span class="btn-quality open-video" @click="openVideo">
-            点击视频播放按钮
-          </span>
+          <div class="modal-title">打开视频，开始驾驶</div>
+          <div class="modal-btn" @click="openVideo">确认</div>
         </div>
         <!-- <div class="icon-wrap mic-wrap" v-show="isMicOpen" ref="micRef" @click="handleMic">
           <img class="icon-image" src="../assets/microphone_open@2x.png" alt="" srcset="">
@@ -1150,13 +1149,12 @@ const handleSelect = (value) => {
 
 const openVideo = () => {
   if (videoRef.value) {
-    alert("videoRef.value")
-    alert(videoRef.value)
     videoRef.value.play().catch(e => console.log('视频播放请求被拦截', e));
   }
 
   handleOpenVideo()
   handleOpenAudio()
+  isShowVideo.value = false;
 }
 
 
@@ -1323,24 +1321,56 @@ $transition: all 0.2s ease-in-out;
     cursor: pointer;
   }
 
-  .log-res {
+ .log-res {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  
+  /* 👇 样式优化 */
+  width: 200px; /* 加宽，防止文字折行 */
+  padding: 15px;
+  box-sizing: border-box;
+  background-color: rgba(0, 0, 0, 0.8); /* 深色半透明背景，提升对比度 */
+  border: 1px solid rgba(245, 197, 66, 0.5); /* 金色半透明边框，呼应原风格 */
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  
+  /* 使用 Flex 布局让内部元素垂直排列、水平居中 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px; /* 标题与按钮之间的间距 */
 
-    position: absolute;
-    top: 12px;
-    left: 70px;
-    z-index: 10;
-
-    .open-video {
-      display: inline-block;
-      font-size: 14px;
-      padding: 0 4px;
-      border: 1px solid #f5c542;
-      color: #fff;
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-
-
+  /* 标题样式 */
+  .modal-title {
+    font-size: 18px;
+    color: #ffffff; /* 白色文字与深色背景形成强对比 */
+    text-align: center;
+    font-weight: 700;
   }
+
+  /* 确认按钮样式 */
+  .modal-btn {
+    width: 100%;
+    padding: 8px 0;
+    font-size: 15px;
+    font-weight: bold;
+    color: #1a1a1a; /* 深色文字 */
+    background-color: #f5c542; /* 金色背景，凸显主要操作 */
+    border-radius: 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.1s ease;
+    
+    /* 点击和交互效果 */
+    &:active {
+      opacity: 0.8;
+      transform: scale(0.97);
+    }
+  }
+}
 
   .video-res {
     position: absolute;
