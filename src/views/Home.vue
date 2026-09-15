@@ -1148,9 +1148,20 @@ const handleSelect = (value) => {
 };
 
 const openVideo = () => {
-  if (videoRef.value) {
-    videoRef.value.play().catch(e => console.log('视频播放请求被拦截', e));
+  const unlockPromises = [];
+  if (audioRef.value) {
+    audioRef.value.muted = false;
+    unlockPromises.push(audioRef.value.play().catch(() => {}));
   }
+  if (videoRef.value) {
+    unlockPromises.push(videoRef.value.play().catch(() => {}));
+  }
+
+  // 2. 等待解锁（短超时，不阻塞流程）
+  await Promise.race([
+    Promise.all(unlockPromises),
+    new Promise(r => setTimeout(r, 300))
+  ]);
 
   handleOpenVideo()
   handleOpenAudio()
